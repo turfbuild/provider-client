@@ -207,6 +207,54 @@ func (p planManagedResourceChangeResponse) Deferred() providerops.Deferred {
 	return deferred{proto: p.proto.Deferred}
 }
 
+// RequiresReplace implements providerops.PlanManagedResourceChangeResponse.
+func (p planManagedResourceChangeResponse) RequiresReplace() iter.Seq[providerops.AttributePath] {
+	return common.MapSeq(slices.Values(p.proto.RequiresReplace), func(protoPath *tfplugin6.AttributePath) providerops.AttributePath {
+		return attributePath{proto: protoPath}
+	})
+}
+
+type attributePath struct {
+	proto *tfplugin6.AttributePath
+	common.SealedImpl
+}
+
+// Steps implements providerops.AttributePath.
+func (a attributePath) Steps() iter.Seq[providerops.AttributePathStep] {
+	return common.MapSeq(slices.Values(a.proto.Steps), func(protoStep *tfplugin6.AttributePath_Step) providerops.AttributePathStep {
+		return attributePathStep{proto: protoStep}
+	})
+}
+
+type attributePathStep struct {
+	proto *tfplugin6.AttributePath_Step
+	common.SealedImpl
+}
+
+// AttributeName implements providerops.AttributePathStep.
+func (s attributePathStep) AttributeName() (string, bool) {
+	if step, ok := s.proto.Selector.(*tfplugin6.AttributePath_Step_AttributeName); ok {
+		return step.AttributeName, true
+	}
+	return "", false
+}
+
+// ElementKeyString implements providerops.AttributePathStep.
+func (s attributePathStep) ElementKeyString() (string, bool) {
+	if step, ok := s.proto.Selector.(*tfplugin6.AttributePath_Step_ElementKeyString); ok {
+		return step.ElementKeyString, true
+	}
+	return "", false
+}
+
+// ElementKeyInt implements providerops.AttributePathStep.
+func (s attributePathStep) ElementKeyInt() (int64, bool) {
+	if step, ok := s.proto.Selector.(*tfplugin6.AttributePath_Step_ElementKeyInt); ok {
+		return step.ElementKeyInt, true
+	}
+	return 0, false
+}
+
 type applyManagedResourceChangeResponse struct {
 	proto *tfplugin6.ApplyResourceChange_Response
 	common.SealedImpl

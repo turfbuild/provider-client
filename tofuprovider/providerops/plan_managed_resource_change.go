@@ -1,6 +1,8 @@
 package providerops
 
 import (
+	"iter"
+
 	"github.com/opentofu/provider-client/tofuprovider/internal/common"
 	"github.com/opentofu/provider-client/tofuprovider/providerschema"
 )
@@ -110,6 +112,15 @@ type PlanManagedResourceChangeResponse interface {
 	// If this returns nil then other methods describe a change that could
 	// potentially be applied.
 	Deferred() Deferred
+
+	// RequiresReplace returns an iterable sequence of attribute paths that
+	// require the resource to be replaced (destroyed and recreated) rather
+	// than updated in-place. If the sequence is empty, the resource can be
+	// updated in-place.
+	//
+	// This is used to determine if a change requires a replace action
+	// (delete then create, or create then delete) versus an update action.
+	RequiresReplace() iter.Seq[AttributePath]
 
 	// TODO: PlannedNewIdentity
 
