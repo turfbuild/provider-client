@@ -331,6 +331,14 @@ func (i importManagedResourceStateResponse) ImportedResources() iter.Seq[provide
 	})
 }
 
+// Deferred implements providerops.ImportManagedResourceStateResponse.
+func (i importManagedResourceStateResponse) Deferred() providerops.Deferred {
+	if i.proto.Deferred == nil {
+		return nil
+	}
+	return deferred{proto: i.proto.Deferred}
+}
+
 type importedManagedResource struct {
 	proto *tfplugin6.ImportResourceState_ImportedResource
 	common.SealedImpl

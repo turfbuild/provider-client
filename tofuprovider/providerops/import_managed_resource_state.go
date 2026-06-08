@@ -46,6 +46,12 @@ type ImportManagedResourceStateResponse interface {
 	// one specific object.
 	ImportedResources() iter.Seq[ImportedManagedResource]
 
+	// Deferred is non-nil if the provider has deferred the import in
+	// response to the caller setting [ClientCapabilities.SupportsDeferral].
+	// When non-nil, the imported state is a placeholder and callers must
+	// not treat it as an authoritative description of the imported object.
+	Deferred() Deferred
+
 	common.Sealed
 }
 
