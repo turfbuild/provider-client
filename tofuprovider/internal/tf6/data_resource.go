@@ -16,9 +16,17 @@ func (p *Provider) ReadDataResource(ctx context.Context, req *providerops.ReadDa
 	if err != nil {
 		return nil, fmt.Errorf("invalid Config value: %w", err)
 	}
-	providerMetaVal, err := makeDynamicValueMsgpack(req.ProviderMeta)
-	if err != nil {
-		return nil, fmt.Errorf("invalid ProviderMeta value: %w", err)
+	// ProviderMeta is optional: callers signal "no meta" by passing
+	// providerschema.NoDynamicValue. The managed-resource paths guard
+	// this; ReadDataResource must too, otherwise providers without a
+	// meta schema fail with "missing required value" on every data
+	// read.
+	var providerMetaVal *tfplugin6.DynamicValue
+	if req.ProviderMeta != providerschema.NoDynamicValue {
+		providerMetaVal, err = makeDynamicValueMsgpack(req.ProviderMeta)
+		if err != nil {
+			return nil, fmt.Errorf("invalid ProviderMeta value: %w", err)
+		}
 	}
 	protoReq := &tfplugin6.ReadDataSource_Request{
 		TypeName:           req.ResourceType,
