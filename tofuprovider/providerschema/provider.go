@@ -43,6 +43,18 @@ type ProviderSchema interface {
 	// resource type.
 	EphemeralResourceTypeSchemas() iter.Seq2[string, Schema]
 
+	// ActionSchemas returns an iterable sequence of the configuration schema
+	// for each provider-defined action supported by this provider.
+	//
+	// The first result in each pair is the unique action type name that the
+	// schema belongs to. Use [maps.Collect] to gather the result into a map
+	// from name to schema if you expect to need schemas for more than one
+	// action type.
+	//
+	// Actions require protocol tfplugin6.10 or later; providers speaking older
+	// protocols yield an empty sequence.
+	ActionSchemas() iter.Seq2[string, Schema]
+
 	// FunctionSignatures returns an iterable sequence of the signature of
 	// each "provider-defined function" supported by this provider.
 	//

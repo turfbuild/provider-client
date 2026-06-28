@@ -145,6 +145,12 @@ type ProviderSchema struct {
 
 var _ providerschema.ProviderSchema = ProviderSchema{}
 
+// ActionSchemas implements [providerschema.ProviderSchema] by reporting no
+// actions at all.
+func (p ProviderSchema) ActionSchemas() iter.Seq2[string, providerschema.Schema] {
+	return func(func(string, providerschema.Schema) bool) {}
+}
+
 // DataResourceTypeSchemas implements [providerschema.ProviderSchema] by
 // reporting no resource types at all.
 func (p ProviderSchema) DataResourceTypeSchemas() iter.Seq2[string, providerschema.Schema] {
