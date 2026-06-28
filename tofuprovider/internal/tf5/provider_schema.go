@@ -55,6 +55,12 @@ type providerSchema struct {
 	common.SealedImpl
 }
 
+// ActionSchemas implements providerschema.ProviderSchema. tfplugin5 has no
+// actions, so this is always empty.
+func (p providerSchema) ActionSchemas() iter.Seq2[string, providerschema.Schema] {
+	return func(func(string, providerschema.Schema) bool) {}
+}
+
 // DataResourceTypeSchemas implements providerschema.ProviderSchema.
 func (p providerSchema) DataResourceTypeSchemas() iter.Seq2[string, providerschema.Schema] {
 	return namedSchemasSeq(p.proto.DataSourceSchemas)

@@ -55,6 +55,13 @@ type providerSchema struct {
 	common.SealedImpl
 }
 
+// ActionSchemas implements providerschema.ProviderSchema.
+func (p providerSchema) ActionSchemas() iter.Seq2[string, providerschema.Schema] {
+	return common.MapSeq2(maps.All(p.proto.ActionSchemas), func(name string, protoAction *tfplugin6.ActionSchema) (string, providerschema.Schema) {
+		return name, schema{proto: protoAction.GetSchema()}
+	})
+}
+
 // DataResourceTypeSchemas implements providerschema.ProviderSchema.
 func (p providerSchema) DataResourceTypeSchemas() iter.Seq2[string, providerschema.Schema] {
 	return namedSchemasSeq(p.proto.DataSourceSchemas)
