@@ -154,6 +154,15 @@ type Provider interface {
 	// a given set of arguments, returning the function's result.
 	CallFunction(ctx context.Context, req *providerops.CallFunctionRequest) (providerops.CallFunctionResponse, error)
 
+	// InvokeAction invokes a provider-defined action of the given type,
+	// returning a server-streaming response of progress events terminated by a
+	// completion event.
+	//
+	// Actions are pure side effects: they do not appear in or modify managed
+	// resource state. Action support requires protocol tfplugin6.10 or later;
+	// providers speaking older protocols do not implement this operation.
+	InvokeAction(ctx context.Context, req *providerops.InvokeActionRequest) (providerops.InvokeActionResponse, error)
+
 	// GracefulStop asks the provider to gracefully abort any active
 	// calls that are running concurrently, causing them to return
 	// with a cancellation-related error as soon as it's safe to do so.
