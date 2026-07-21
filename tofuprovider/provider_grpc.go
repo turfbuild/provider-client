@@ -84,14 +84,27 @@ type GRPCPluginProvider interface {
 // object when you no longer need the provider, so that the child process
 // can be terminated.
 func StartGRPCPlugin(ctx context.Context, exe string, args ...string) (GRPCPluginProvider, error) {
+	return StartGRPCPluginInDir(ctx, "", exe, args...)
+}
+
+// StartGRPCPluginInDir is StartGRPCPlugin with control over the plugin child
+// process's working directory. When dir is non-empty it becomes the process
+// cwd (exec.Cmd.Dir), so a provider that resolves a relative path — a kubeconfig,
+// a local-exec working dir, a file the provider itself opens — resolves it
+// against dir rather than inheriting the calling process's cwd. An empty dir
+// preserves the inherit-cwd behavior of StartGRPCPlugin.
+func StartGRPCPluginInDir(ctx context.Context, dir, exe string, args ...string) (GRPCPluginProvider, error) {
 	tracer := providertrace.TracerFromContext(ctx)
+
+	cmd := exec.Command(exe, args...)
+	cmd.Dir = dir
 
 	plugin, err := rpcplugin.New(ctx, &rpcplugin.ClientConfig{
 		Handshake: rpcplugin.HandshakeConfig{
 			CookieKey:   "TF_PLUGIN_MAGIC_COOKIE",
 			CookieValue: "d602bf8f470bc67ca7faa0386276bbdd4330efaf76d1a219cb4d6991ca9872b2",
 		},
-		Cmd:    exec.Command(exe, args...),
+		Cmd:    cmd,
 		Stderr: tracer.ChildStderr,
 		ProtoVersions: map[int]rpcplugin.ClientVersion{
 			5: tf5.PluginClient{}, // clientProxy is tfplugin5.ProviderClient
