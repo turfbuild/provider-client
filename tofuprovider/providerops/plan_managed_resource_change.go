@@ -66,7 +66,14 @@ type PlanManagedResourceChangeRequest struct {
 	// by default to avoid confusing older clients.
 	ClientCapabilities *ClientCapabilities
 
-	// TODO: PriorIdentity
+	// PriorIdentity is the resource identity recorded alongside PriorState,
+	// when the provider implements resource identity for this resource type.
+	//
+	// Leave unassigned ([providerschema.NoDynamicValue]) when the resource type
+	// declares no identity schema, and when planning a create — including the
+	// create half of a replace, where carrying the prior object's identity
+	// forward would assert that the new remote object is the old one.
+	PriorIdentity providerschema.DynamicValueIn
 }
 
 type PlanManagedResourceChangeResponse interface {
@@ -122,7 +129,14 @@ type PlanManagedResourceChangeResponse interface {
 	// (delete then create, or create then delete) versus an update action.
 	RequiresReplace() iter.Seq[AttributePath]
 
-	// TODO: PlannedNewIdentity
+	// PlannedNewIdentity is the identity the provider expects the object to
+	// have once this plan is applied, to be passed back as
+	// [ApplyManagedResourceChangeRequest.PlannedNewIdentity].
+	//
+	// Returns nil when the provider did not include identity in its response.
+	// A planned identity may contain unknown values when the provider derives
+	// it from data that is not decided until apply.
+	PlannedNewIdentity() providerschema.DynamicValueOut
 
 	common.Sealed
 }

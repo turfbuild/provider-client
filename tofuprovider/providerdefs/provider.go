@@ -103,6 +103,16 @@ func (Provider) UpgradeManagedResourceState(ctx context.Context, req *providerop
 	return nil, common.ErrUnimplemented
 }
 
+// GetResourceIdentitySchemas implements [tofuprovider.Provider].
+func (Provider) GetResourceIdentitySchemas(ctx context.Context, req *providerops.GetResourceIdentitySchemasRequest) (providerops.GetResourceIdentitySchemasResponse, error) {
+	return nil, common.ErrUnimplemented
+}
+
+// UpgradeResourceIdentity implements [tofuprovider.Provider].
+func (Provider) UpgradeResourceIdentity(ctx context.Context, req *providerops.UpgradeResourceIdentityRequest) (providerops.UpgradeResourceIdentityResponse, error) {
+	return nil, common.ErrUnimplemented
+}
+
 // ValidateDataResourceConfig implements [tofuprovider.Provider].
 func (Provider) ValidateDataResourceConfig(ctx context.Context, req *providerops.ValidateDataResourceConfigRequest) (providerops.ValidateDataResourceConfigResponse, error) {
 	return nil, common.ErrUnimplemented

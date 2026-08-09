@@ -40,7 +40,16 @@ type ReadManagedResourceRequest struct {
 	// by default to avoid confusing older clients.
 	ClientCapabilities *ClientCapabilities
 
-	// TODO: CurrentIdentity
+	// CurrentIdentity is the resource identity that was most recently returned
+	// for this remote object, when the provider implements resource identity
+	// for this resource type.
+	//
+	// Leave unassigned ([providerschema.NoDynamicValue]) when the resource type
+	// declares no identity schema, or when no prior call produced one. As with
+	// CurrentState, the value must conform to the provider's *current* identity
+	// schema — use the UpgradeResourceIdentity operation first if it was
+	// recorded under an older identity version.
+	CurrentIdentity providerschema.DynamicValueIn
 }
 
 type ReadManagedResourceResponse interface {
@@ -70,7 +79,13 @@ type ReadManagedResourceResponse interface {
 	// should replace the previous values that were saved in the prior state.
 	Deferred() Deferred
 
-	// TODO: NewIdentity
+	// NewIdentity is the updated resource identity, to be saved alongside the
+	// new state data.
+	//
+	// Returns nil when the provider did not include identity in its response —
+	// which is the norm for resource types that declare no identity schema, and
+	// for providers that do not implement identity at all.
+	NewIdentity() providerschema.DynamicValueOut
 
 	common.Sealed
 }

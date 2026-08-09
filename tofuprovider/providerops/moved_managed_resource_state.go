@@ -40,7 +40,20 @@ type MoveManagedResourceStateRequest struct {
 	// should be converted to.
 	TargetResourceType string
 
-	// TODO: SourceIdentity and SourceIdentitySchemaVersion
+	// SourceIdentitySchemaVersion is the identity version that was current
+	// when the raw identity data in SourceIdentityRaw was created. This is
+	// separate from SourceSchemaVersion, which describes the resource's own
+	// schema.
+	SourceIdentitySchemaVersion int64
+
+	// SourceIdentityRaw is the raw representation of the source object's
+	// resource identity, when the source provider recorded one.
+	//
+	// As with SourceStateRaw this is left undecoded, since the client is not
+	// expected to have schema information for the source provider. Leave
+	// unassigned (the zero [providerschema.RawState]) when the source object
+	// carried no identity.
+	SourceIdentityRaw providerschema.RawState
 }
 
 type MoveManagedResourceStateResponse interface {

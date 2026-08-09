@@ -22,7 +22,15 @@ type ImportManagedResourceStateRequest struct {
 	// by default to avoid confusing older clients.
 	ClientCapabilities *ClientCapabilities
 
-	// TODO: Identity
+	// Identity locates the object to be imported by its resource identity,
+	// as an alternative to the string ID.
+	//
+	// Callers set either ID or Identity, not both. Identity-keyed import
+	// requires the resource type to declare an identity schema; the value must
+	// conform to it and must populate at least every attribute the schema marks
+	// [providerschema.ResourceIdentityAttribute.RequiredForImport]. Leave
+	// unassigned ([providerschema.NoDynamicValue]) to import by ID.
+	Identity providerschema.DynamicValueIn
 }
 
 type ImportManagedResourceStateResponse interface {
@@ -66,7 +74,11 @@ type ImportedManagedResource interface {
 	// details on how to use this.
 	ProviderInternal() []byte
 
-	// TODO: Identity
+	// Identity is the resource identity of the imported object, to be saved
+	// alongside its state.
+	//
+	// Returns nil when the provider did not include identity in its response.
+	Identity() providerschema.DynamicValueOut
 
 	common.Sealed
 }

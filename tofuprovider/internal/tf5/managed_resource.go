@@ -35,13 +35,19 @@ func (p *Provider) ApplyManagedResourceChange(ctx context.Context, req *provider
 		}
 	}
 
+	plannedIdentity, err := makeResourceIdentityData(req.PlannedNewIdentity)
+	if err != nil {
+		return nil, fmt.Errorf("invalid PlannedNewIdentity value: %w", err)
+	}
+
 	protoReq := &tfplugin5.ApplyResourceChange_Request{
-		TypeName:       req.ResourceType,
-		PriorState:     priorState,
-		PlannedState:   plannedNewState,
-		Config:         config,
-		PlannedPrivate: req.PlannedProviderInternal,
-		ProviderMeta:   providerMeta,
+		TypeName:        req.ResourceType,
+		PriorState:      priorState,
+		PlannedState:    plannedNewState,
+		Config:          config,
+		PlannedPrivate:  req.PlannedProviderInternal,
+		ProviderMeta:    providerMeta,
+		PlannedIdentity: plannedIdentity,
 	}
 
 	protoResp, err := p.client.ApplyResourceChange(ctx, protoReq)
@@ -53,10 +59,16 @@ func (p *Provider) ApplyManagedResourceChange(ctx context.Context, req *provider
 
 // ImportManagedResourceState implements tofuprovider.GRPCPluginProvider.
 func (p *Provider) ImportManagedResourceState(ctx context.Context, req *providerops.ImportManagedResourceStateRequest) (providerops.ImportManagedResourceStateResponse, error) {
+	identity, err := makeResourceIdentityData(req.Identity)
+	if err != nil {
+		return nil, fmt.Errorf("invalid Identity value: %w", err)
+	}
+
 	protoReq := &tfplugin5.ImportResourceState_Request{
 		TypeName:           req.ResourceType,
 		Id:                 req.ID,
 		ClientCapabilities: prepareClientCapabilities(req.ClientCapabilities),
+		Identity:           identity,
 	}
 
 	protoResp, err := p.client.ImportResourceState(ctx, protoReq)
@@ -94,6 +106,11 @@ func (p *Provider) PlanManagedResourceChange(ctx context.Context, req *providero
 		}
 	}
 
+	priorIdentity, err := makeResourceIdentityData(req.PriorIdentity)
+	if err != nil {
+		return nil, fmt.Errorf("invalid PriorIdentity value: %w", err)
+	}
+
 	protoReq := &tfplugin5.PlanResourceChange_Request{
 		TypeName:           req.ResourceType,
 		PriorState:         priorState,
@@ -102,6 +119,7 @@ func (p *Provider) PlanManagedResourceChange(ctx context.Context, req *providero
 		PriorPrivate:       req.PriorProviderInternal,
 		ProviderMeta:       providerMeta,
 		ClientCapabilities: prepareClientCapabilities(req.ClientCapabilities),
+		PriorIdentity:      priorIdentity,
 	}
 
 	protoResp, err := p.client.PlanResourceChange(ctx, protoReq)
@@ -126,12 +144,18 @@ func (p *Provider) ReadManagedResource(ctx context.Context, req *providerops.Rea
 		}
 	}
 
+	currentIdentity, err := makeResourceIdentityData(req.CurrentIdentity)
+	if err != nil {
+		return nil, fmt.Errorf("invalid CurrentIdentity value: %w", err)
+	}
+
 	protoReq := &tfplugin5.ReadResource_Request{
 		TypeName:           req.ResourceType,
 		CurrentState:       currentState,
 		Private:            req.ProviderInternal,
 		ProviderMeta:       providerMeta,
 		ClientCapabilities: prepareClientCapabilities(req.ClientCapabilities),
+		CurrentIdentity:    currentIdentity,
 	}
 
 	protoResp, err := p.client.ReadResource(ctx, protoReq)
@@ -214,6 +238,11 @@ func (p planManagedResourceChangeResponse) RequiresReplace() iter.Seq[providerop
 	})
 }
 
+// PlannedNewIdentity implements providerops.PlanManagedResourceChangeResponse.
+func (p planManagedResourceChangeResponse) PlannedNewIdentity() providerschema.DynamicValueOut {
+	return resourceIdentityOut(p.proto.PlannedIdentity)
+}
+
 type attributePath struct {
 	proto *tfplugin5.AttributePath
 	common.SealedImpl
@@ -283,6 +312,11 @@ func (a applyManagedResourceChangeResponse) LegacyTypeSystem() bool {
 	return a.proto.LegacyTypeSystem
 }
 
+// NewIdentity implements providerops.ApplyManagedResourceChangeResponse.
+func (a applyManagedResourceChangeResponse) NewIdentity() providerschema.DynamicValueOut {
+	return resourceIdentityOut(a.proto.NewIdentity)
+}
+
 type readManagedResourceResponse struct {
 	proto *tfplugin5.ReadResource_Response
 	common.SealedImpl
@@ -312,6 +346,11 @@ func (r readManagedResourceResponse) Deferred() providerops.Deferred {
 		return nil
 	}
 	return deferred{proto: r.proto.Deferred}
+}
+
+// NewIdentity implements providerops.ReadManagedResourceResponse.
+func (r readManagedResourceResponse) NewIdentity() providerschema.DynamicValueOut {
+	return resourceIdentityOut(r.proto.NewIdentity)
 }
 
 type importManagedResourceStateResponse struct {
@@ -360,4 +399,9 @@ func (i importedManagedResource) State() providerschema.DynamicValueOut {
 // ProviderInternal implements providerops.ImportedManagedResource.
 func (i importedManagedResource) ProviderInternal() []byte {
 	return i.proto.Private
+}
+
+// Identity implements providerops.ImportedManagedResource.
+func (i importedManagedResource) Identity() providerschema.DynamicValueOut {
+	return resourceIdentityOut(i.proto.Identity)
 }

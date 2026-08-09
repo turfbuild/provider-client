@@ -66,6 +66,32 @@ type Provider interface {
 	// schema.
 	UpgradeManagedResourceState(ctx context.Context, req *providerops.UpgradeManagedResourceStateRequest) (providerops.UpgradeManagedResourceStateResponse, error)
 
+	// GetResourceIdentitySchemas requests the resource identity schema of
+	// every managed resource type the provider implements resource identity
+	// for.
+	//
+	// Resource identity is optional, both per provider and per resource type.
+	// Providers predating the operation reject the call outright; this library
+	// absorbs that and reports an empty set of schemas with no error, so
+	// callers can treat "provider is too old" and "provider implements no
+	// identity" identically.
+	//
+	// Unlike OpenTofu, which folds identity schemas into its cached
+	// GetProviderSchema result, this library keeps one method per protocol
+	// request — callers that want the schemas cached alongside the provider
+	// schema should call this explicitly and cache both.
+	GetResourceIdentitySchemas(ctx context.Context, req *providerops.GetResourceIdentitySchemasRequest) (providerops.GetResourceIdentitySchemasResponse, error)
+
+	// UpgradeResourceIdentity asks the provider to prepare some raw resource
+	// identity data previously saved for a managed resource instance to suit
+	// the identity schema of its resource type in the current version of the
+	// provider.
+	//
+	// This is the identity-side counterpart to UpgradeManagedResourceState,
+	// and exists for the same reason: identity is separately versioned, and the
+	// client cannot find the identity schema of an earlier provider version.
+	UpgradeResourceIdentity(ctx context.Context, req *providerops.UpgradeResourceIdentityRequest) (providerops.UpgradeResourceIdentityResponse, error)
+
 	// ReadManagedResource trades a previously-saved state object of a
 	// managed resource type for a new object updated to match the current
 	// configuration of the remote object.

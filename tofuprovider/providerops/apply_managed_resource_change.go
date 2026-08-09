@@ -56,7 +56,15 @@ type ApplyManagedResourceChangeRequest struct {
 	// ProviderMetaSchema.
 	ProviderMeta providerschema.DynamicValueIn
 
-	// TODO: PlannedNewIdentity
+	// PlannedNewIdentity is the identity the provider returned as
+	// [PlanManagedResourceChangeResponse.PlannedNewIdentity] for the plan being
+	// applied. Callers MUST pass back exactly what the plan produced.
+	//
+	// Leave unassigned ([providerschema.NoDynamicValue]) when the plan returned
+	// no identity. Note there is no prior-identity field on this operation: the
+	// create-versus-update distinction is already settled at plan time and
+	// inherited here.
+	PlannedNewIdentity providerschema.DynamicValueIn
 }
 
 type ApplyManagedResourceChangeResponse interface {
@@ -94,7 +102,11 @@ type ApplyManagedResourceChangeResponse interface {
 	// provider behavior consistency checks.
 	LegacyTypeSystem() bool
 
-	// TODO: NewIdentity
+	// NewIdentity is the resource identity of the object as it exists after
+	// the apply, to be saved alongside the new state data.
+	//
+	// Returns nil when the provider did not include identity in its response.
+	NewIdentity() providerschema.DynamicValueOut
 
 	common.Sealed
 }
