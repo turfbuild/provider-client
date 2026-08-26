@@ -17,6 +17,17 @@ type ValidateManagedResourceConfigRequest struct {
 	// type of the schema given in by this provider's
 	// [providerschema.ProviderSchema.ManagedResourceTypeSchemas] method.
 	Config providerschema.DynamicValueIn
+
+	// ClientCapabilities allows the caller to declare that it is capable of
+	// handling protocol features the provider must otherwise disable to avoid
+	// confusing older clients.
+	//
+	// It matters here and not on the data-source twin because a write-only
+	// attribute is a managed-resource idea: a provider whose caller has not
+	// declared SupportsWriteOnlyAttributes rejects any configuration that sets
+	// one, at validation, before the plan is ever attempted. Protocol 5 has no
+	// equivalent field on this request, so this is honoured for protocol 6 only.
+	ClientCapabilities *ClientCapabilities
 }
 
 type ValidateManagedResourceConfigResponse interface {

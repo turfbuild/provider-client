@@ -177,8 +177,9 @@ func (p *Provider) ValidateManagedResourceConfig(ctx context.Context, req *provi
 		return nil, fmt.Errorf("invalid Config value: %w", err)
 	}
 	protoReq := &tfplugin6.ValidateResourceConfig_Request{
-		TypeName: req.ResourceType,
-		Config:   configVal,
+		TypeName:           req.ResourceType,
+		Config:             configVal,
+		ClientCapabilities: prepareClientCapabilities(req.ClientCapabilities),
 	}
 
 	protoResp, err := p.client.ValidateResourceConfig(ctx, protoReq)
