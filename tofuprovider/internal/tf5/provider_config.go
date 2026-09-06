@@ -60,6 +60,7 @@ func (p *Provider) ConfigureProvider(ctx context.Context, req *providerops.Confi
 		return nil, fmt.Errorf("invalid Config value: %w", err)
 	}
 	protoReq := &tfplugin5.Configure_Request{
+		TerraformVersion:   req.TerraformVersion,
 		Config:             configVal,
 		ClientCapabilities: prepareClientCapabilities(req.ClientCapabilities),
 	}
