@@ -50,8 +50,8 @@ type ProviderSchema interface {
 	// from name to schema if you expect to need schemas for more than one
 	// action type.
 	//
-	// Actions require protocol tfplugin6.10 or later; providers speaking older
-	// protocols yield an empty sequence.
+	// Actions arrived in protocol tfplugin 6.10 and 5.11; a provider that
+	// predates them yields an empty sequence.
 	ActionSchemas() iter.Seq2[string, Schema]
 
 	// FunctionSignatures returns an iterable sequence of the signature of

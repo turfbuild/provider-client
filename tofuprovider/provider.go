@@ -154,13 +154,36 @@ type Provider interface {
 	// a given set of arguments, returning the function's result.
 	CallFunction(ctx context.Context, req *providerops.CallFunctionRequest) (providerops.CallFunctionResponse, error)
 
+	// ValidateActionConfig tests whether a given action configuration object
+	// is acceptable per the provider's internally-implemented validation
+	// rules.
+	//
+	// This method should be called before calling [ConfigureProvider].
+	//
+	// Actions arrived in protocol tfplugin 6.10 and 5.11; a provider that
+	// predates them rejects this and the other action operations, which
+	// [providerops.IsUnimplementedErr] recognizes.
+	ValidateActionConfig(ctx context.Context, req *providerops.ValidateActionConfigRequest) (providerops.ValidateActionConfigResponse, error)
+
+	// PlanAction asks a configured provider to consider an action's
+	// configuration ahead of its invocation, reporting plan-time diagnostics
+	// and — when the request permits deferral — whether the action cannot be
+	// invoked yet.
+	//
+	// An action has no state and no planned value, so unlike
+	// PlanManagedResourceChange the response carries nothing to apply: a
+	// caller that receives no errors and no deferral goes on to InvokeAction
+	// with the same configuration once its unknown values are decided.
+	PlanAction(ctx context.Context, req *providerops.PlanActionRequest) (providerops.PlanActionResponse, error)
+
 	// InvokeAction invokes a provider-defined action of the given type,
 	// returning a server-streaming response of progress events terminated by a
 	// completion event.
 	//
 	// Actions are pure side effects: they do not appear in or modify managed
-	// resource state. Action support requires protocol tfplugin6.10 or later;
-	// providers speaking older protocols do not implement this operation.
+	// resource state. Actions arrived in protocol tfplugin 6.10 and 5.11; a
+	// provider that predates them rejects the call, which
+	// [providerops.IsUnimplementedErr] recognizes.
 	InvokeAction(ctx context.Context, req *providerops.InvokeActionRequest) (providerops.InvokeActionResponse, error)
 
 	// GracefulStop asks the provider to gracefully abort any active

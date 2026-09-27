@@ -43,6 +43,7 @@ func TestGetProviderSchema(t *testing.T) {
 					checkEmptySeq2(t, "managed resource type", schema.ManagedResourceTypeSchemas())
 					checkEmptySeq2(t, "data resource type", schema.DataResourceTypeSchemas())
 					checkEmptySeq2(t, "ephemeral resource type", schema.EphemeralResourceTypeSchemas())
+					checkEmptySeq2(t, "action", schema.ActionSchemas())
 					checkEmptySeq2(t, "function", schema.FunctionSignatures())
 				},
 			},
