@@ -11,6 +11,69 @@ import (
 	"github.com/opentofu/provider-client/tofuprovider/providerops"
 )
 
+// ValidateActionConfig implements tofuprovider.GRPCPluginProvider.
+func (p *Provider) ValidateActionConfig(ctx context.Context, req *providerops.ValidateActionConfigRequest) (providerops.ValidateActionConfigResponse, error) {
+	configVal, err := makeDynamicValueMsgpack(req.Config)
+	if err != nil {
+		return nil, fmt.Errorf("invalid Config value: %w", err)
+	}
+	protoReq := &tfplugin6.ValidateActionConfig_Request{
+		ActionType: req.ActionType,
+		Config:     configVal,
+	}
+	protoResp, err := p.client.ValidateActionConfig(ctx, protoReq)
+	if err != nil {
+		return nil, err
+	}
+	return validateActionConfigResponse{proto: protoResp}, nil
+}
+
+type validateActionConfigResponse struct {
+	proto *tfplugin6.ValidateActionConfig_Response
+	common.SealedImpl
+}
+
+// Diagnostics implements providerops.ValidateActionConfigResponse.
+func (r validateActionConfigResponse) Diagnostics() providerops.Diagnostics {
+	return diagnostics{proto: r.proto.Diagnostics}
+}
+
+// PlanAction implements tofuprovider.GRPCPluginProvider.
+func (p *Provider) PlanAction(ctx context.Context, req *providerops.PlanActionRequest) (providerops.PlanActionResponse, error) {
+	configVal, err := makeDynamicValueMsgpack(req.Config)
+	if err != nil {
+		return nil, fmt.Errorf("invalid Config value: %w", err)
+	}
+	protoReq := &tfplugin6.PlanAction_Request{
+		ActionType:         req.ActionType,
+		Config:             configVal,
+		ClientCapabilities: prepareClientCapabilities(req.ClientCapabilities),
+	}
+	protoResp, err := p.client.PlanAction(ctx, protoReq)
+	if err != nil {
+		return nil, err
+	}
+	return planActionResponse{proto: protoResp}, nil
+}
+
+type planActionResponse struct {
+	proto *tfplugin6.PlanAction_Response
+	common.SealedImpl
+}
+
+// Diagnostics implements providerops.PlanActionResponse.
+func (r planActionResponse) Diagnostics() providerops.Diagnostics {
+	return diagnostics{proto: r.proto.Diagnostics}
+}
+
+// Deferred implements providerops.PlanActionResponse.
+func (r planActionResponse) Deferred() providerops.Deferred {
+	if r.proto.Deferred == nil {
+		return nil
+	}
+	return deferred{proto: r.proto.Deferred}
+}
+
 // InvokeAction implements tofuprovider.GRPCPluginProvider.
 func (p *Provider) InvokeAction(ctx context.Context, req *providerops.InvokeActionRequest) (providerops.InvokeActionResponse, error) {
 	configVal, err := makeDynamicValueMsgpack(req.Config)
@@ -18,8 +81,9 @@ func (p *Provider) InvokeAction(ctx context.Context, req *providerops.InvokeActi
 		return nil, fmt.Errorf("invalid Config value: %w", err)
 	}
 	protoReq := &tfplugin6.InvokeAction_Request{
-		ActionType: req.ActionType,
-		Config:     configVal,
+		ActionType:         req.ActionType,
+		Config:             configVal,
+		ClientCapabilities: prepareClientCapabilities(req.ClientCapabilities),
 	}
 	stream, err := p.client.InvokeAction(ctx, protoReq)
 	if err != nil {
