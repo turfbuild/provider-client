@@ -19,6 +19,16 @@ type InvokeActionRequest struct {
 	// Config is the action's configuration object, encoded using the
 	// serialization type from the action's schema.
 	Config providerschema.DynamicValueIn
+
+	// ClientCapabilities allows the caller to declare that it is capable of
+	// handling certain response data that was added to the protocol after
+	// it was initially defined, and thus which the provider must disable
+	// by default to avoid confusing older clients.
+	//
+	// Callers that set SupportsDeferral on the PlanAction request for the
+	// same invocation should set it here too, so the provider sees one
+	// consistent client across the two calls.
+	ClientCapabilities *ClientCapabilities
 }
 
 // InvokeActionResponse is the server-streaming result of invoking an action.

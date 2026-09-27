@@ -36,6 +36,16 @@ func (Provider) CloseEphemeralResource(ctx context.Context, req *providerops.Clo
 	return nil, common.ErrUnimplemented
 }
 
+// ValidateActionConfig implements [tofuprovider.Provider].
+func (Provider) ValidateActionConfig(ctx context.Context, req *providerops.ValidateActionConfigRequest) (providerops.ValidateActionConfigResponse, error) {
+	return nil, common.ErrUnimplemented
+}
+
+// PlanAction implements [tofuprovider.Provider].
+func (Provider) PlanAction(ctx context.Context, req *providerops.PlanActionRequest) (providerops.PlanActionResponse, error) {
+	return nil, common.ErrUnimplemented
+}
+
 // InvokeAction implements [tofuprovider.Provider].
 func (Provider) InvokeAction(ctx context.Context, req *providerops.InvokeActionRequest) (providerops.InvokeActionResponse, error) {
 	return nil, common.ErrUnimplemented
