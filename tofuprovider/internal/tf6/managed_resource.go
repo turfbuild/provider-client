@@ -143,7 +143,41 @@ func (p *Provider) ReadManagedResource(ctx context.Context, req *providerops.Rea
 
 // UpgradeManagedResourceState implements tofuprovider.GRPCPluginProvider.
 func (p *Provider) UpgradeManagedResourceState(ctx context.Context, req *providerops.UpgradeManagedResourceStateRequest) (providerops.UpgradeManagedResourceStateResponse, error) {
-	panic("unimplemented")
+	if req.PrevStateRaw.JSON == nil && req.PrevStateRaw.Flatmap == nil {
+		return nil, fmt.Errorf("missing required PrevStateRaw value")
+	}
+	protoReq := &tfplugin6.UpgradeResourceState_Request{
+		TypeName: req.ResourceType,
+		Version:  req.SchemaVersion,
+		RawState: &tfplugin6.RawState{
+			Json:    req.PrevStateRaw.JSON,
+			Flatmap: req.PrevStateRaw.Flatmap,
+		},
+	}
+	protoResp, err := p.client.UpgradeResourceState(ctx, protoReq)
+	if err != nil {
+		return nil, err
+	}
+	return upgradeManagedResourceStateResponse{proto: protoResp}, nil
+}
+
+type upgradeManagedResourceStateResponse struct {
+	proto *tfplugin6.UpgradeResourceState_Response
+
+	common.SealedImpl
+}
+
+// Diagnostics implements providerops.UpgradeManagedResourceStateResponse.
+func (u upgradeManagedResourceStateResponse) Diagnostics() providerops.Diagnostics {
+	return diagnostics{proto: u.proto.Diagnostics}
+}
+
+// UpgradedState implements providerops.UpgradeManagedResourceStateResponse.
+func (u upgradeManagedResourceStateResponse) UpgradedState() providerschema.DynamicValueOut {
+	if u.proto.UpgradedState == nil {
+		return nil
+	}
+	return dynamicValue{proto: u.proto.UpgradedState}
 }
 
 // ValidateManagedResourceConfig implements tofuprovider.GRPCPluginProvider.
